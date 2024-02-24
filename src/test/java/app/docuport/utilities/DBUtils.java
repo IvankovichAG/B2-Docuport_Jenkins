@@ -1,16 +1,14 @@
 package app.docuport.utilities;
-
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DBUtils {
 
     private static Connection connection;
     private static Statement statement;
     private static ResultSet resultSet;
+
+    private static ResultSetMetaData rsmd ;
 
     /**
      * Create a jdbc connection using the url, username, password
@@ -217,12 +215,138 @@ public class DBUtils {
         }
     }
 
-    public static int getRowCount() throws Exception {
 
-        resultSet.last();
+//    public static int getRowCount() throws Exception {
+//
+//        resultSet.last();
+//
+//        int rowCount = resultSet.getRow();
+//        return rowCount;
+//
+//    }
 
-        int rowCount = resultSet.getRow();
-        return rowCount;
+
+    /**
+     * We know how to store one row as map object
+     * Now Store All rows as List of Map object
+     * @return List of Map object that contain each row data as Map<String,String>
+     */
+    public static List<Map<String,String>> getAllRowAsListOfMap(){
+
+        List<Map<String,String>> allRowLstOfMap = new ArrayList<>();
+        int rowCount = getRowCount() ;
+        // move from first row till last row
+        // get each row as map object and add it to the list
+
+        for (int rowIndex = 1; rowIndex <= rowCount ; rowIndex++) {
+
+            Map<String,String> rowMap = getRowMap(rowIndex);
+            allRowLstOfMap.add( rowMap ) ;
+
+        }
+        resetCursor();
+
+        return allRowLstOfMap ;
+
+    }
+
+    /**
+     * This method will reset the cursor to before first location
+     */
+    private static void resetCursor(){
+
+        try {
+            resultSet.beforeFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * find out the row count
+     * @return row count of this ResultSet
+     */
+    public static int getRowCount(){
+
+        int rowCount = 0 ;
+        try {
+            resultSet.last() ;
+            rowCount = resultSet.getRow() ;
+        } catch (Exception e) {
+            System.out.println("ERROR OCCURRED WHILE GETTING ROW COUNT " + e.getMessage() );
+        }finally {
+            resetCursor();
+        }
+
+        return rowCount ;
+
+    }
+
+
+    /**
+     * Save entire row data as Map<String,String>
+     * @param rowNum row number
+     * @return Map object that contains key value pair
+     *      key     : column name
+     *      value   : cell value
+     */
+    public static Map<String,String> getRowMap(int rowNum){
+
+        Map<String,String> rowMap = new LinkedHashMap<>();
+        int columnCount = getColumnCount() ;
+
+        try{
+
+            resultSet.absolute(rowNum) ;
+
+            for (int colIndex = 1; colIndex <= columnCount ; colIndex++) {
+                String columnName = rsmd.getColumnName(colIndex) ;
+                String cellValue  = resultSet.getString(colIndex) ;
+                rowMap.put(columnName, cellValue) ;
+            }
+
+        }catch(Exception e){
+            System.out.println("ERROR OCCURRED WHILE getRowMap " + e.getMessage() );
+        }finally {
+            resetCursor();
+        }
+
+
+        return rowMap ;
+    }
+
+
+    /**
+     * find out the column count
+     * @return column count of this ResultSet
+     */
+    public static int getColumnCount(){
+
+        int columnCount = 0 ;
+
+        try {
+            columnCount = rsmd.getColumnCount();
+
+        } catch (Exception e) {
+            System.out.println("ERROR OCCURRED WHILE GETTING COLUMN COUNT " + e.getMessage() );
+        }
+
+        return columnCount ;
+
+    }
+
+    public static ResultSet runQuery(String sql){
+
+        try {
+            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            resultSet = statement.executeQuery(sql); // setting the value of ResultSet object
+            rsmd = resultSet.getMetaData() ;  // setting the value of ResultSetMetaData for reuse
+        }catch(Exception e){
+            System.out.println("ERROR OCCURRED WHILE RUNNING QUERY "+ e.getMessage() );
+        }
+
+        return resultSet ;
 
     }
 
