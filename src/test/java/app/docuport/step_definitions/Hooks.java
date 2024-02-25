@@ -28,7 +28,6 @@ public class Hooks {
 		// we put a logic that should apply to every scenario
 		System.out.println("Setting up webdriver");
 		Driver.getDriver();
-
 	}
 	
 	@After("@ui")
