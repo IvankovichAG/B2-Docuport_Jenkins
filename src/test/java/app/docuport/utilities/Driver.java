@@ -8,6 +8,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
@@ -24,7 +25,9 @@ import org.openqa.selenium.safari.SafariDriver;
 
 import java.net.URL;
 
-    public class Driver {
+import static java.lang.Integer.*;
+
+public class Driver {
         static String browser;
 
         private Driver() {
@@ -49,6 +52,8 @@ import java.net.URL;
                     case "chrome":
                         WebDriverManager.chromedriver().setup();
                         driver = new ChromeDriver();
+                        driver.manage().window().maximize();
+                       // driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(valueOf(ConfigurationReader.getProperty("timeout"))));
                         break;
 
                     case "chrome-headless":
